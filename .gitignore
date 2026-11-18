@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+
+# Entornos virtuales
+.venv/
+venv/
+
+# Trayectorias y configuraciones: pueden pesar varios GB.
+# Sólo se versionan los datos de ejemplo.
+*.nc
+*.data
+!datos/ejemplo/*.nc
+!datos/ejemplo/*.data
+
+# Resultados de análisis
+resultados/
