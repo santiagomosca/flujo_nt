@@ -667,6 +667,9 @@ class Trayectoria:
     tiempos : numpy.ndarray
         Tiempos de todos los cuadros, con forma ``(n_cuadros,)``, en
         femtosegundos. El factor de escala del archivo ya está aplicado.
+    paso_integracion : float or None
+        Paso de integración de la simulación, en femtosegundos, o None si
+        el archivo no lo registra.
     tipos : numpy.ndarray
         Tipo de cada partícula, con forma ``(n_atomos,)`` y tipo entero.
         Leído del primer cuadro; su validez para toda la trayectoria se
@@ -741,6 +744,7 @@ class Trayectoria:
             #/ significa lectura ansiosa y propiedad significa lectura
             #/ perezosa o valor derivado.
             self.tiempos = self._leer_variable('tiempos')
+            self.paso_integracion = self._leer_paso_integracion()
             self.tipos = self._leer_cuadro('tipos', 0)
             self.celda = self._construir_celda()
 
@@ -1181,6 +1185,43 @@ class Trayectoria:
         valores, conteos = np.unique(self.tipos, return_counts=True)
 
         return dict(zip(valores.tolist(), conteos.tolist()))
+
+    #/ ---- tiempo ---------------------------------------------------------
+
+    def _leer_paso_integracion(self):
+        """
+        Paso de integración registrado en el archivo.
+
+        En las trayectorias de LAMMPS, la variable de tiempo guarda el número
+        de paso y su atributo ``scale_factor`` es el paso de integración. Las
+        reescritas por OVITO guardan el tiempo ya escalado, sin ese atributo.
+
+        Returns
+        -------
+        float or None
+            Paso de integración en femtosegundos, o None si el archivo no lo
+            registra.
+        """
+        variable = self._variable('tiempos')
+
+        if 'scale_factor' not in variable.ncattrs():
+            return None
+
+        return float(variable.scale_factor)
+
+    @property
+    def pasos(self):
+        """
+        numpy.ndarray or None: Número de paso de integración de cada cuadro.
+
+        Tiene forma ``(n_cuadros,)`` y tipo entero. Es la numeración de
+        pasos que usa LAMMPS en sus archivos de salida. Es None si el
+        archivo no registra el paso de integración.
+        """
+        if self.paso_integracion is None:
+            return None
+
+        return np.rint(self.tiempos / self.paso_integracion).astype(int)
 
     #/ ---- iteración ------------------------------------------------------
 

@@ -65,6 +65,15 @@ def test_tiempos_aplican_scale_factor(trayectoria):
     assert trayectoria.tiempos == pytest.approx([0.0, 1000.0])
 
 
+def test_pasos_de_integracion(trayectoria, crear_netcdf):
+    """El número de paso es el que usa LAMMPS en sus archivos de salida."""
+    assert trayectoria.paso_integracion == pytest.approx(2.0)
+    np.testing.assert_array_equal(trayectoria.pasos, [0, 500])
+
+    with Trayectoria(crear_netcdf()) as tr:
+        np.testing.assert_array_equal(tr.pasos, [0, 250, 500])
+
+
 def test_tipos_presentes(trayectoria):
     assert trayectoria.tipos_presentes == {
         1: 27493, 2: 54986, 3: 3575, 4: 3575, 5: 3575, 6: 4788, 7: 3120}
@@ -164,6 +173,7 @@ def test_variable_ausente(crear_netcdf):
 def test_dialecto_ovito(crear_netcdf):
     ruta = crear_netcdf(
         programa='OVITO',
+        paso_integracion=None,
         nombre_tipos='atom_types',
         nombre_identificadores='identifier',
         variables_extra=('Velocity Magnitude',))
@@ -172,6 +182,7 @@ def test_dialecto_ovito(crear_netcdf):
         assert tr.dialecto.nombre == 'OVITO'
         np.testing.assert_array_equal(tr.tipos, [1, 2, 1, 2])
         assert 'identificadores' in tr.variables_disponibles
+        assert tr.paso_integracion is None and tr.pasos is None
 
 
 @pytest.mark.parametrize('nombre_tipos, dialecto', [

@@ -89,7 +89,7 @@ def referencia_lammps():
 
 def escribir_netcdf(ruta, n_cuadros=3, n_atomos=4, programa='LAMMPS',
         tipos=None, identificadores=None, longitudes=None, origen=None,
-        posiciones=None, velocidades=None,
+        posiciones=None, velocidades=None, paso_integracion=2.0,
         nombre_tipos='type', nombre_identificadores='id',
         con_fuerzas=False, variables_extra=()):
     """
@@ -98,6 +98,11 @@ def escribir_netcdf(ruta, n_cuadros=3, n_atomos=4, programa='LAMMPS',
     Los argumentos no dados toman valores válidos: tipos y orden constantes,
     identificadores crecientes y celda constante no degenerada. Las
     velocidades sólo se escriben si se dan.
+
+    Como LAMMPS, el tiempo se guarda como número de paso con el paso de
+    integración en el atributo ``scale_factor``, salvo que
+    ``paso_integracion`` sea None, como en las trayectorias de OVITO. En
+    ambos casos los tiempos leídos son 0, 500, 1000... fs.
     """
     if tipos is None:
         tipos = np.tile(np.arange(n_atomos) % 2 + 1, (n_cuadros, 1))
@@ -122,6 +127,11 @@ def escribir_netcdf(ruta, n_cuadros=3, n_atomos=4, programa='LAMMPS',
         ds.createDimension('cell_spatial', 3)
 
         tiempo = ds.createVariable('time', 'f4', ('frame',))
+        tiempo.units = 'femtosecond'
+        if paso_integracion is not None:
+            #/ Con el atributo definido antes de escribir, netCDF4 guarda el
+            #/ tiempo dividido por el factor, es decir, el número de paso
+            tiempo.scale_factor = paso_integracion
         tiempo[:] = np.arange(n_cuadros) * 500.0
 
         ds.createVariable(

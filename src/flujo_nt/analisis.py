@@ -116,6 +116,9 @@ class Resultado:
     metadatos : dict, optional
         Parámetros y valores derivados del cálculo, para el encabezado de
         los archivos y para la trazabilidad.
+    formatos : dict, optional
+        Formato de escritura de las columnas que no usan el predeterminado,
+        por nombre; por ejemplo ``{'paso': '%d'}``.
 
     Attributes
     ----------
@@ -129,18 +132,22 @@ class Resultado:
         Unidades de cada columna.
     metadatos : dict
         Parámetros y valores derivados del cálculo.
+    formatos : dict
+        Formatos de escritura particulares de algunas columnas.
 
     Examples
     --------
     >>> resultado['Jn']
     """
 
-    def __init__(self, calculo, especie, columnas, unidades, metadatos=None):
+    def __init__(self, calculo, especie, columnas, unidades, metadatos=None,
+            formatos=None):
         self.calculo = calculo
         self.especie = especie
         self.columnas = dict(columnas)
         self.unidades = dict(unidades)
         self.metadatos = dict(metadatos or {})
+        self.formatos = dict(formatos or {})
 
     def __getitem__(self, nombre):
         return self.columnas[nombre]
@@ -967,6 +974,9 @@ class Pervaporacion(Analisis):
     allá de un extremo del tubo, es decir, en el reservorio de destino. Como
     en LAMMPS, la coordenada es absoluta y el umbral es ``l/2``.
 
+    El resultado identifica cada cuadro por su número de paso de
+    integración, como el archivo que escribe LAMMPS.
+
     Parameters
     ----------
     especie : Especie
@@ -978,16 +988,22 @@ class Pervaporacion(Analisis):
     lado : {1, -1}, optional
         Reservorio de destino: 1 para el de coordenada positiva, -1 para el
         de coordenada negativa. Por defecto 1.
+    paso_integracion : float, optional
+        Paso de integración en fs, para numerar los cuadros. Por defecto el
+        que registra la trayectoria; es obligatorio para trayectorias que no
+        lo registran, como las reescritas por OVITO.
 
     Raises
     ------
     ErrorAnalisis
-        Si el lado no es 1 o -1, o si falta el tubo y no se dio el largo.
+        Si el lado no es 1 o -1, si falta el tubo y no se dio el largo, o
+        si no se conoce el paso de integración.
     """
 
     calculo = 'conteo.pervaporacion'
 
-    def __init__(self, especie, tubo=None, largo=None, lado=1):
+    def __init__(self, especie, tubo=None, largo=None, lado=1,
+            paso_integracion=None):
         super().__init__(especie)
 
         if lado not in (1, -1):
@@ -999,12 +1015,22 @@ class Pervaporacion(Analisis):
         self.tubo = tubo
         self.largo = tubo.largo if largo is None else largo
         self.lado = lado
+        self.paso_integracion = paso_integracion
 
     def _preparar(self, trayectoria):
         if self.tubo is None:
             self._marco = MarcoTubo.desde_celda(trayectoria.celda)
         else:
             self._marco = self.tubo.marco
+
+        self._paso = (self.paso_integracion if self.paso_integracion
+                      is not None else trayectoria.paso_integracion)
+
+        if self._paso is None:
+            raise ErrorAnalisis(
+                'La trayectoria no registra el paso de integración (por '
+                'ejemplo, si fue reescrita por OVITO). Indicarlo con '
+                'paso_integracion.')
 
         self._conteo = []
 
@@ -1022,8 +1048,8 @@ class Pervaporacion(Analisis):
         Returns
         -------
         Resultado
-            Columnas ``tiempo`` (fs) y ``n`` (partículas en el reservorio de
-            destino), una fila por cuadro.
+            Columnas ``paso`` (número de paso de integración) y ``n``
+            (partículas en el reservorio de destino), una fila por cuadro.
 
         Raises
         ------
@@ -1032,14 +1058,17 @@ class Pervaporacion(Analisis):
         """
         self._verificar_datos()
 
+        pasos = np.rint(self.tiempos / self._paso).astype(int)
+
         return Resultado(
             self.calculo, self.especie,
-            columnas={'tiempo': self.tiempos,
-                      'n': np.concatenate(self._conteo)},
-            unidades={'tiempo': 'fs', 'n': '-'},
+            columnas={'paso': pasos, 'n': np.concatenate(self._conteo)},
+            unidades={'paso': '-', 'n': '-'},
             metadatos={'umbral': self.lado * self.largo / 2,
                        'largo': self.largo, 'lado': self.lado,
-                       'n_cuadros': self._n_cuadros})
+                       'paso_integracion': self._paso,
+                       'n_cuadros': self._n_cuadros},
+            formatos={'paso': '%d'})
 
 
 #/ ---- RECORRIDO --------------------------------------------------------

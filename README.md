@@ -38,6 +38,7 @@ src/flujo_nt/    paquete
   geometria.py     marco de referencia y medición del tubo curvo
   especies.py      especies de partículas del sistema
   analisis.py      flujo, densidades, perfil de velocidad, pervaporación
+  escritura.py     escritura y lectura de resultados en texto
 scripts/         herramientas de línea de comandos
 tests/           tests y valores de referencia (biblioteca original, LAMMPS)
 datos/ejemplo/   dos cuadros de una trayectoria real y su configuración

@@ -323,7 +323,7 @@ def test_rango_de_cuadros(trayectoria, tubo_ejemplo):
                           [Pervaporacion(buscar_especie('Oa'), tubo_ejemplo)],
                           inicio=1)
 
-    np.testing.assert_array_equal(resultado['tiempo'], [1000.0])
+    np.testing.assert_array_equal(resultado['paso'], [500])
 
 
 def test_calculos_tienen_nombres_distintos(tubo_ejemplo):
@@ -363,6 +363,23 @@ def test_resultado_sin_cuadros_falla(trayectoria, tubo_ejemplo):
 
     with pytest.raises(ErrorAnalisis, match='ningún cuadro'):
         analisis.resultado()
+
+
+def test_pervaporacion_sin_paso_de_integracion(crear_netcdf):
+    """Una trayectoria de OVITO no registra el paso: hay que indicarlo."""
+    ruta = crear_netcdf(programa='OVITO', paso_integracion=None,
+                        nombre_tipos='atom_types',
+                        nombre_identificadores='identifier')
+    agua = buscar_especie('Oa')
+
+    with Trayectoria(ruta) as tr:
+        with pytest.raises(ErrorAnalisis, match='paso de integración'):
+            recorrer(tr, [Pervaporacion(agua, largo=10.0)])
+
+        resultado, = recorrer(tr, [Pervaporacion(agua, largo=10.0,
+                                                 paso_integracion=2.0)])
+
+    np.testing.assert_array_equal(resultado['paso'], [0, 250, 500])
 
 
 @pytest.mark.parametrize('construir', [
