@@ -57,10 +57,12 @@ def test_dialecto_y_dimensiones(trayectoria):
 
 def test_tiempos_aplican_scale_factor(trayectoria):
     """
-    Regresión: la variable time de LAMMPS trae scale_factor igual al paso de
-    integración. Sin aplicarlo se obtendrían números de paso (0, 250).
+    Regresión: la variable time de LAMMPS guarda el número de paso y trae
+    scale_factor igual al paso de integración (2 fs). Con un volcado cada
+    500 pasos, sin aplicar el factor se obtendrían números de paso (0, 500)
+    en lugar de tiempos (0, 1000 fs).
     """
-    assert trayectoria.tiempos == pytest.approx([0.0, 500.0])
+    assert trayectoria.tiempos == pytest.approx([0.0, 1000.0])
 
 
 def test_tipos_presentes(trayectoria):
