@@ -70,6 +70,7 @@ src/flujo_nt/    paquete
   recorte.py       recorte de trayectorias
   cli.py           comando flujo-nt
 tests/           tests y valores de referencia (biblioteca original, LAMMPS)
+rendimiento/     medición de tiempo y memoria según el tamaño de bloque
 datos/ejemplo/   dos cuadros de una trayectoria real y su configuración
 legado/          biblioteca original y scripts que generan las referencias
 ```
@@ -87,6 +88,20 @@ dirección longitudinal, a 398 K:
   final escrita con `write_data`. Es necesaria porque la simulación usa
   `kspace_modify slab` y la trayectoria registra longitud de celda nula en z.
 
+## Rendimiento
+
+`rendimiento/medir_rendimiento.py` mide el tiempo real, el tiempo de CPU y el
+pico de memoria de los análisis para distintos tamaños de bloque, cada
+medición en un proceso propio:
+
+```bash
+python rendimiento/medir_rendimiento.py sistema.1.nc -t 1,10,50,200,todo \
+    -r 3 -o rendimiento.dat
+```
+
+El tamaño `todo` procesa la trayectoria en un solo bloque, con todos los
+cuadros en memoria a la vez.
+
 ## Estilo
 
 El código sigue PEP 8 con dos excepciones deliberadas, declaradas en
@@ -94,5 +109,9 @@ El código sigue PEP 8 con dos excepciones deliberadas, declaradas en
 continuación alineada. Las docstrings siguen la convención numpydoc.
 
 ```bash
-pycodestyle src tests
+pycodestyle src tests rendimiento
 ```
+
+## Licencia
+
+MIT; ver `LICENSE`.
