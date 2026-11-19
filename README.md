@@ -19,7 +19,35 @@ pip install -e ".[desarrollo]"
 
 La opción `-e` instala el paquete en modo editable: los cambios en `src/` se
 ven sin reinstalar. El grupo `desarrollo` agrega pytest, pycodestyle y
-numpydoc.
+numpydoc. La instalación crea el comando `flujo-nt` en el entorno; si se
+agrega un comando nuevo, hay que reinstalar una vez para que aparezca.
+
+## Uso
+
+El comando `flujo-nt analizar` recibe una o más trayectorias y, con una sola
+pasada por cada una, escribe los resultados junto a ellas como
+`<base>.<cálculo>.<especie>.dat`, donde `<base>` es la ruta de la trayectoria
+sin la extensión. La configuración se busca como `<base>.final.data`.
+
+```bash
+flujo-nt analizar sistema.1.nc
+flujo-nt analizar sistema.1.nc -c flujo,pervaporacion -e Oa
+```
+
+La selección de trayectorias queda a cargo del intérprete de comandos, de modo
+que el comando no depende de cómo estén organizados los directorios:
+
+```bash
+RAIZ=/home/usuario/reservorios
+shopt -s globstar
+flujo-nt analizar $RAIZ/R{1-5,3-0}/**/*.398K.{1,2}.nc -q 2> avisos.log
+```
+
+Si una trayectoria falla, se informa y se sigue con las demás. Los avisos
+(por ejemplo, cada archivo que se sobrescribe) y los errores van a la salida
+de errores. `flujo-nt analizar -h` lista los cálculos, las especies por
+defecto de cada uno y las opciones. `flujo-nt recortar` copia los primeros
+cuadros de una trayectoria a un archivo nuevo.
 
 ## Tests
 
@@ -39,7 +67,8 @@ src/flujo_nt/    paquete
   especies.py      especies de partículas del sistema
   analisis.py      flujo, densidades, perfil de velocidad, pervaporación
   escritura.py     escritura y lectura de resultados en texto
-scripts/         herramientas de línea de comandos
+  recorte.py       recorte de trayectorias
+  cli.py           comando flujo-nt
 tests/           tests y valores de referencia (biblioteca original, LAMMPS)
 datos/ejemplo/   dos cuadros de una trayectoria real y su configuración
 legado/          biblioteca original y scripts que generan las referencias
@@ -65,5 +94,5 @@ El código sigue PEP 8 con dos excepciones deliberadas, declaradas en
 continuación alineada. Las docstrings siguen la convención numpydoc.
 
 ```bash
-pycodestyle src tests scripts
+pycodestyle src tests
 ```

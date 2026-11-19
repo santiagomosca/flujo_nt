@@ -14,6 +14,9 @@ dependencies = [
     "netCDF4>=1.6",
 ]
 
+[project.scripts]
+flujo-nt = "flujo_nt.cli:main"
+
 [project.optional-dependencies]
 desarrollo = [
     "pytest>=7",
