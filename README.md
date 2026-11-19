@@ -33,17 +33,21 @@ Los tests que usan los datos de ejemplo se omiten si los archivos no están en
 ## Estructura
 
 ```
-src/flujo_nt/    paquete: lectura de trayectorias y geometría del tubo
+src/flujo_nt/    paquete
+  trayectoria.py   lectura perezosa de trayectorias y configuraciones
+  geometria.py     marco de referencia y medición del tubo curvo
+  especies.py      especies de partículas del sistema
+  analisis.py      flujo, densidades, perfil de velocidad, pervaporación
 scripts/         herramientas de línea de comandos
-tests/           tests y valores de referencia de la biblioteca original
+tests/           tests y valores de referencia (biblioteca original, LAMMPS)
 datos/ejemplo/   dos cuadros de una trayectoria real y su configuración
-legado/          biblioteca original, usada sólo para generar la referencia
+legado/          biblioteca original y scripts que generan las referencias
 ```
 
 ## Datos de ejemplo
 
 `datos/ejemplo/` contiene los dos primeros cuadros de una simulación de la
-mezcla con fracción molar 0.115, tubo de radio nominal 1.5 y largo nominal
+mezcla agua-metanol con fracción molar de metanol 0.115, tubo de radio nominal 1.5 y largo nominal
 37.5 (en unidades de sigma_ref), campo eléctrico de valor 1e-5 en la
 dirección longitudinal, a 398 K:
 

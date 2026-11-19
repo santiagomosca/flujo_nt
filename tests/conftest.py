@@ -7,7 +7,8 @@ Hay dos fuentes de datos:
 
 - Los datos de ejemplo de ``datos/ejemplo``: dos cuadros de una trayectoria
   real con su archivo de configuración. Los tests que los usan se omiten si
-  los archivos no están.
+  los archivos no están. Los valores de referencia de la biblioteca
+  original y de LAMMPS para esos dos cuadros están en ``tests/*.json``.
 - Sistemas sintéticos construidos en el momento: trayectorias netCDF
   pequeñas y tubos de geometría conocida, para los casos que los datos reales
   no ejercitan.
@@ -34,6 +35,7 @@ TRAYECTORIA_EJEMPLO = DIRECTORIO_EJEMPLO / f'{NOMBRE_EJEMPLO}_2cuadros.nc'
 CONFIGURACION_EJEMPLO = DIRECTORIO_EJEMPLO / f'{NOMBRE_EJEMPLO}_final.data'
 REFERENCIA_ORIGINAL = (
     pathlib.Path(__file__).parent / 'referencia_original.json')
+REFERENCIA_LAMMPS = pathlib.Path(__file__).parent / 'referencia_lammps.json'
 
 
 #/ ---- DATOS DE EJEMPLO --------------------------------------------------
@@ -77,17 +79,25 @@ def referencia():
     return json.loads(REFERENCIA_ORIGINAL.read_text())
 
 
+@pytest.fixture(scope='session')
+def referencia_lammps():
+    """Valores escritos por LAMMPS durante la corrida."""
+    return json.loads(REFERENCIA_LAMMPS.read_text())
+
+
 #/ ---- TRAYECTORIAS SINTÉTICAS -------------------------------------------
 
 def escribir_netcdf(ruta, n_cuadros=3, n_atomos=4, programa='LAMMPS',
-        tipos=None, identificadores=None, longitudes=None,
+        tipos=None, identificadores=None, longitudes=None, origen=None,
+        posiciones=None, velocidades=None,
         nombre_tipos='type', nombre_identificadores='id',
         con_fuerzas=False, variables_extra=()):
     """
     Escritura de una trayectoria netCDF mínima con convención AMBER.
 
     Los argumentos no dados toman valores válidos: tipos y orden constantes,
-    identificadores crecientes y celda constante no degenerada.
+    identificadores crecientes y celda constante no degenerada. Las
+    velocidades sólo se escriben si se dan.
     """
     if tipos is None:
         tipos = np.tile(np.arange(n_atomos) % 2 + 1, (n_cuadros, 1))
@@ -95,6 +105,11 @@ def escribir_netcdf(ruta, n_cuadros=3, n_atomos=4, programa='LAMMPS',
         identificadores = np.tile(np.arange(1, n_atomos + 1), (n_cuadros, 1))
     if longitudes is None:
         longitudes = np.tile([10.0, 10.0, 20.0], (n_cuadros, 1))
+    if origen is None:
+        origen = np.zeros((n_cuadros, 3))
+    if posiciones is None:
+        posiciones = np.arange(n_cuadros * n_atomos * 3).reshape(
+            n_cuadros, n_atomos, 3)
 
     with Dataset(ruta, 'w', format='NETCDF3_64BIT_DATA') as ds:
         ds.Conventions = 'AMBER'
@@ -109,10 +124,14 @@ def escribir_netcdf(ruta, n_cuadros=3, n_atomos=4, programa='LAMMPS',
         tiempo = ds.createVariable('time', 'f4', ('frame',))
         tiempo[:] = np.arange(n_cuadros) * 500.0
 
-        posiciones = ds.createVariable(
-            'coordinates', 'f4', ('frame', 'atom', 'spatial'))
-        posiciones[:] = np.arange(n_cuadros * n_atomos * 3).reshape(
-            n_cuadros, n_atomos, 3)
+        ds.createVariable(
+            'coordinates', 'f4', ('frame', 'atom', 'spatial'))[:] = \
+            posiciones
+
+        if velocidades is not None:
+            ds.createVariable(
+                'velocities', 'f4', ('frame', 'atom', 'spatial'))[:] = \
+                velocidades
 
         ds.createVariable(nombre_tipos, 'i4', ('frame', 'atom'))[:] = tipos
         ds.createVariable(
@@ -121,8 +140,7 @@ def escribir_netcdf(ruta, n_cuadros=3, n_atomos=4, programa='LAMMPS',
         ds.createVariable(
             'cell_lengths', 'f4', ('frame', 'cell_spatial'))[:] = longitudes
         ds.createVariable(
-            'cell_origin', 'f4', ('frame', 'cell_spatial'))[:] = \
-            np.zeros((n_cuadros, 3))
+            'cell_origin', 'f4', ('frame', 'cell_spatial'))[:] = origen
 
         if con_fuerzas:
             ds.createVariable(

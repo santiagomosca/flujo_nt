@@ -443,11 +443,12 @@ class Tubo:
         simulación puede repetirse en cada cuadro, sobre posiciones que ya
         están en memoria, sin lecturas adicionales.
 
-        Respecto de ``obtener_dimensiones_tubo`` de la biblioteca original se
-        corrigieron tres defectos en la construcción de los anillos: el
-        anillo central tenía el doble de ancho, los átomos de los extremos de
-        la región podían quedar fuera de todo anillo, y un anillo vacío
-        desplazaba los centros de todos los siguientes.
+        Todos los anillos tienen el mismo ancho, ajustado para que un número
+        entero de ellos cubra exactamente la región medida, de modo que cada
+        átomo de la región pertenece a un único anillo. Cada anillo se
+        identifica por su posición sobre el eje, y uno con menos de
+        :data:`MINIMO_ATOMOS_ANILLO` átomos se informa como error en lugar
+        de alterar la medición de los demás.
         """
         posiciones = np.asarray(posiciones)
 
@@ -682,11 +683,10 @@ class Tubo:
         :meth:`MarcoTubo.radial`, pero las transversales no pueden
         recuperarse de la radial.
 
-        Reemplaza a las cuatro copias del bloque de interpolación de la
-        biblioteca original, que además calculaban los pesos contra los
-        bordes de los anillos en lugar de contra sus puntos medios: el centro
-        interpolado quedaba corrido medio anillo, y en la mitad exterior de
-        los anillos extremos no se aplicaba corrección.
+        Los nodos de la interpolación son los puntos medios de los anillos,
+        :attr:`medios_anillos`, donde el centro medido de cada anillo es
+        exacto. La interpolación se hace con ``numpy.interp``, vectorizada
+        sobre todas las partículas y cuadros a la vez.
         """
         corregidas = np.array(posiciones, copy=True)
         longitudinal = self.marco.longitudinal(corregidas)

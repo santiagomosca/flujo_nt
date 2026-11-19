@@ -12,6 +12,10 @@ trayectoria
 geometria
     Marco de referencia del tubo, medición del tubo curvo y corrección de
     posiciones por su curvatura.
+especies
+    Especies de partículas del sistema.
+analisis
+    Análisis de flujo, densidad, perfil de velocidad y pervaporación.
 
 @author: Santiago Mosca <santiagomosca85@gmail.com>
 
@@ -26,16 +30,39 @@ from .trayectoria import (
     ErrorTrayectoria,
     Trayectoria)
 from .geometria import ErrorGeometria, MarcoTubo, Tubo
+from .especies import ESPECIES_AGUA_METANOL, Especie, buscar_especie
+from .analisis import (
+    Analisis,
+    DensidadLongitudinal,
+    DensidadRadial,
+    ErrorAnalisis,
+    Flujo,
+    PerfilVelocidad,
+    Pervaporacion,
+    Resultado,
+    recorrer)
 
 __version__ = '0.1.0'
 
 __all__ = [
+    'Analisis',
     'Bloque',
     'Celda',
     'Configuracion',
+    'DensidadLongitudinal',
+    'DensidadRadial',
     'Dialecto',
+    'ESPECIES_AGUA_METANOL',
+    'ErrorAnalisis',
     'ErrorGeometria',
     'ErrorTrayectoria',
+    'Especie',
+    'Flujo',
     'MarcoTubo',
+    'PerfilVelocidad',
+    'Pervaporacion',
+    'Resultado',
     'Trayectoria',
-    'Tubo']
+    'Tubo',
+    'buscar_especie',
+    'recorrer']

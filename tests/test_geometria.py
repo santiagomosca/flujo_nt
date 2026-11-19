@@ -40,7 +40,7 @@ def test_marco_desde_celda_corregida(trayectoria):
     [64.0, 65.0, 20.0]],
     ids=['degenerada', 'ambigua'])
 def test_marco_desde_celda_rechaza(longitudes):
-    """La biblioteca original devolvía 'X' en silencio en ambos casos."""
+    """Sin un lado claramente mayor, el eje no puede detectarse."""
     with pytest.raises(ErrorGeometria):
         MarcoTubo.desde_celda(Celda(longitudes, [0, 0, 0]))
 
@@ -64,9 +64,8 @@ def test_largo_reproduce_original(tubo_ejemplo, referencia):
 
 def test_radio_cercano_al_original(tubo_ejemplo, referencia):
     """
-    El radio difiere levemente del original porque los anillos se
-    construyen con bordes corregidos (ancho uniforme, sin átomos fuera de
-    los anillos).
+    El radio difiere levemente del original porque los anillos tienen
+    ancho uniforme y cubren exactamente la región medida.
     """
     assert tubo_ejemplo.radio == pytest.approx(referencia['radio'], abs=5e-3)
 
