@@ -25,6 +25,9 @@ desarrollo = [
     "pycodestyle>=2.9",
     "numpydoc>=1.5",
 ]
+memoria = [
+    "matplotlib>=3.5",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]

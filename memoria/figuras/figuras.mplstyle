@@ -1,0 +1,23 @@
+text.usetex : True
+text.latex.preamble: \usepackage{amsmath} \usepackage{amssymb} \usepackage{siunitx} \usepackage{xfrac}
+axes.titlesize : 24
+axes.labelsize : 20
+lines.linewidth : 2
+lines.markersize : 10
+xtick.labelsize : 16
+ytick.labelsize : 16
+figure.figsize : 6.4, 4.8
+figure.titlesize : 24
+figure.labelsize : 20
+legend.fontsize : 16
+
+# Para guardar EPS
+savefig.format: eps
+savefig.dpi: 600
+savefig.transparent: True
+pdf.fonttype: 42 # fuentes TrueType en PDF/EPS
+ps.fonttype: 42
+
+# Salida EPS optimizada para LaTeX
+#savefig.bbox: tight
+#savefig.pad_inches: 0.02
