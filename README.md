@@ -220,6 +220,13 @@ conteos del flujo con la biblioteca original. También se verifica, con
 sistemas sintéticos de geometría conocida, que los análisis den los valores
 exactos, y que los resultados no dependan del tamaño de bloque.
 
+La biblioteca original se conserva en `legado/`, junto con los scripts que
+generan los valores de referencia: `generar_referencia.py` ejecuta la
+biblioteca original sobre los datos de ejemplo y escribe
+`tests/referencia_original.json`, y `extraer_referencia_lammps.py` toma los
+archivos que escribió LAMMPS durante la simulación y escribe
+`tests/referencia_lammps.json`.
+
 ## Tests
 
 ```bash
