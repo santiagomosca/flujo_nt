@@ -98,29 +98,16 @@ mezclas de agua y metanol a través de nanotubos de grafeno, como modelo
 simplificado del proceso de pervaporación a través de los canales de una
 membrana hidrofóbica.
 
-El sistema consiste en un nanotubo de grafeno de pared simple, de
-\SI{131.25}{\angstrom} de largo y \SI{10.5}{\angstrom} o
-\SI{21}{\angstrom} de diámetro, unido por sus extremos a dos láminas de
-grafeno que delimitan los reservorios; el agua se modeló con el potencial
-TIP4P/2005 y el metanol con OPLS/2016, en mezclas con fracción molar de
-metanol de \num{0.115} y \num{0.692}. Cada simulación se desarrolla en dos
-etapas. En la primera, a \SI{298}{\kelvin}, el sistema es periódico en las
-tres direcciones y el tubo está alineado con el eje $x$, de modo que el
-fluido a ambos lados del tubo se conecta a través de la frontera periódica y
-forma un único reservorio, desde el cual la mezcla llena el tubo mientras se
-insertan moléculas en las zonas donde la densidad baja, para mantener la
-densidad y la composición del reservorio. En la segunda, destinada a estudiar
-la pervaporación a \SI{398}{\kelvin}, las moléculas de un lado del tubo se
-trasladan al otro y los extremos de la celda se cierran con láminas de
-grafeno puramente repulsivas, de modo que queda un reservorio lleno, de
-doble largo, otro vacío y el tubo todavía lleno de la mezcla. Esta etapa
-exige cortar la periodicidad a lo largo del eje del tubo, y con ella cambia
-el tratamiento de las interacciones coulombianas de largo alcance, que pasan
-a calcularse sólo en las direcciones periódicas mediante una geometría de
-slab: LAMMPS la implementa con la opción \texttt{kspace\_modify slab}, que
-inserta vacío entre las réplicas en la dirección cortada y elimina la
-interacción dipolar entre ellas, pero que sólo admite que esa dirección sea
-$z$, por lo que en esta etapa el tubo debe alinearse con ese eje.
+El sistema consiste en un nanotubo de grafeno que conecta dos reservorios, y
+cada simulación tiene dos etapas: el llenado del tubo con la mezcla, en un
+sistema periódico en las tres direcciones con el tubo alineado con el eje
+$x$, y la pervaporación, en la que uno de los reservorios se vacía y se corta
+la periodicidad a lo largo del tubo. Esta segunda etapa requiere tratar las
+interacciones coulombianas de largo alcance con la aproximación de slab de
+LAMMPS (\texttt{kspace\_modify slab}), que sólo admite que la dirección no
+periódica sea $z$, por lo que el tubo debe alinearse con ese eje; los
+detalles del sistema y del protocolo de simulación se describen
+en~\cite{mosca2025}.
 
 Cada simulación produce trayectorias en formato netCDF con la convención de
 AMBER~\cite{amber_netcdf}, con del orden de $10^5$ partículas (\num{101112}
@@ -132,13 +119,8 @@ de la distancia al eje, la densidad a lo largo del eje y la cantidad de
 moléculas que alcanzan el reservorio receptor, desarrollé una biblioteca de
 funciones en Python, con cálculos vectorizados con NumPy~\cite{numpy} y un
 tratamiento del tubo como lo que es durante la simulación, un cilindro que
-se curva, y alrededor de ella una decena de scripts, uno por análisis. Con
-esas herramientas se obtuvieron los resultados publicados
-en~\cite{mosca2025}, cuyo hallazgo principal es que, una vez alcanzado el
-equilibrio en el reservorio receptor, la concentración de alcohol supera
-ampliamente la que correspondería al equilibrio líquido-vapor sin
-confinamiento, sobre todo a partir de soluciones diluidas y en tubos dos a
-tres veces más anchos que el tamaño medio de las moléculas.
+se curva, y alrededor de ella una decena de scripts, uno por análisis. Con esas
+herramientas se obtuvieron los resultados publicados en~\cite{mosca2025}.
 
 Ese código, sin embargo, creció sobre la marcha, a medida que el trabajo
 pedía nuevos análisis, y acumuló tres limitaciones: las sucesivas versiones
@@ -150,8 +132,7 @@ pervaporación debían rotarse antes de analizarse, y esas rotaciones, al
 duplicar la trayectoria en memoria, la agotaban en los sistemas más grandes.
 Como buena parte del código era reutilizable, para el trabajo final de este
 curso me propuse reescribirlo como un paquete de Python, \paquete, con tres
-metas: un diseño orientado a objetos, como el que se promovió en el curso
-tanto para Python como para C++; un desarrollo versionado, publicado en un
+metas: un diseño orientado a objetos; un desarrollo versionado, publicado en un
 repositorio e instalable como paquete; y un uso de memoria independiente del
 largo de la trayectoria, que aprovechara los algoritmos ya diseñados para
 hacerlos todavía más eficientes y permitiera analizar las trayectorias en
@@ -318,23 +299,15 @@ las partículas se refieren luego al eje curvo:
 donde $s$ es la coordenada longitudinal, $\mathbf{c}(s)$ interpola
 linealmente los centros de los anillos y $s_0$ es el centro del tubo.
 
-\paragraph{Magnitudes calculadas.} En una región cilíndrica coaxial con el
-eje curvo, de largo $L_\text{r}$ (el 90\,\% central del tubo) y radio $R$ (el
-radio medio del tubo), el flujo numérico de una especie en el cuadro $t$ y
-la densidad en el bin radial $k$ son
-\begin{equation}
-    J_n(t) = \frac{1}{\pi R^2 L_\text{r}} \sum_{j \in \text{región}}
-             v_{j,\parallel}(t), \qquad
-    \rho_k = \frac{\langle N_k \rangle}{\pi \left(r_{k+1}^2 - r_k^2\right)
-             L_\text{r}},
-\end{equation}
-con $v_{j,\parallel}$ la velocidad longitudinal, $N_k$ las partículas en el
-bin y $\langle\cdot\rangle$ el promedio sobre cuadros. El flujo másico es
-$J_m = M J_n$, con $M$ la masa de la molécula. Los conteos por cuadro y por
-bin de un bloque entero se obtienen con una sola llamada a
+\paragraph{Magnitudes calculadas.} Las definiciones de cada magnitud están
+en~\cite{mosca2025}: el flujo de cada especie se obtiene sumando las
+velocidades longitudinales de sus partículas en una región cilíndrica
+coaxial con el tubo y dividiendo por el volumen de esa región, y la densidad
+y el perfil de velocidad radiales, contando partículas y sumando sus
+velocidades en anillos concéntricos. Los conteos y las sumas de todos los
+cuadros y todos los bins de un bloque se obtienen con una sola llamada a
 \texttt{numpy.bincount}, combinando el bin $k$ y el cuadro $f$ en el índice
-$k + n_\text{bins} f$; con las velocidades como pesos, la misma llamada da
-las sumas del perfil de velocidad.
+$k + n_\text{bins} f$.
 
 \subsection{Calidad, reproducibilidad y uso}
 
